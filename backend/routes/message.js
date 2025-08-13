@@ -4,7 +4,14 @@ import { MessageRepository } from "../repos/MessageRepo.js";
 const router = express.Router();
 
 router.get("/conversations", async (req, res) => {
-  res.json(await MessageRepository.findAllGrouped());
+  try {
+    const grouped = await MessageRepository.findAllGrouped();
+    const messagesArray = Array.isArray(grouped) ? grouped : Object.values(grouped); 
+    res.json(messagesArray);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.get("/messages/:wa_id", async (req, res) => {
