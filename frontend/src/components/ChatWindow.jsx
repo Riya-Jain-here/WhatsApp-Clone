@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './ChatWindowStyle.css';
 import API from '../services/api';
-import { io } from 'socket.io-client';
-
-const socket = io('https://whatsapp-clone-backend-x0z5.onrender.com', { transports: ['websocket'] });
+import socket from '../services/socket';
 
 export default function ChatWindow({ wa_id }) {
   const [messages, setMessages] = useState([]);
@@ -68,7 +66,6 @@ export default function ChatWindow({ wa_id }) {
 
   return (
     <div className="chat-container">
-      {/* Header */}
       <div className="chat-header">
         <div className="avatar">{contactName.charAt(0).toUpperCase()}</div>
         <div className="info">
@@ -77,7 +74,6 @@ export default function ChatWindow({ wa_id }) {
         </div>
       </div>
 
-      {/* Messages */}
       <div className="messages-container">
         {messages.map((m) => {
           const msgDate = new Date(m.timestamp);
@@ -105,7 +101,6 @@ export default function ChatWindow({ wa_id }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       <div className="input-container">
         <input
           type="text"

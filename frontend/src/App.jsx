@@ -3,31 +3,24 @@ import ChatList from './components/ChatList';
 import ChatWindow from './components/ChatWindow';
 import './App.css';
 import API from './services/api';
-import { io } from 'socket.io-client';
-
-// Connect to backend socket
-const socket = io('https://whatsapp-clone-backend-x0z5.onrender.com', { transports: ['websocket'] });
+import socket from './services/socket';
 
 export default function App() {
   const [conversations, setConversations] = useState({});
   const [selectedChat, setSelectedChat] = useState(null);
-  const [loading, setLoading] = useState(true); // NEW: loading state
+  const [loading, setLoading] = useState(true);
 
   const loadConversations = async () => {
     try {
       const res = await API.get('/conversations');
-      const messages = Array.isArray(res.data) ? res.data : []; // ENSURE array
+      const messagesArray = Array.isArray(res.data) ? res.data : [];
 
-      // Group messages by wa_id
+      // Convert array to object keyed by wa_id
       const grouped = {};
-      messages.forEach((m) => {
-        if (!grouped[m.wa_id]) grouped[m.wa_id] = { messages: [], latestMessage: null };
-        grouped[m.wa_id].messages.push({ ...m, timestamp: new Date(m.timestamp) });
-
-        if (!grouped[m.wa_id].latestMessage ||
-            new Date(m.timestamp) > new Date(grouped[m.wa_id].latestMessage.timestamp)) {
-          grouped[m.wa_id].latestMessage = { ...m, timestamp: new Date(m.timestamp) };
-        }
+      messagesArray.forEach((convo) => {
+        grouped[convo.wa_id] = convo;
+        grouped[convo.wa_id].messages = convo.messages.map(m => ({ ...m, timestamp: new Date(m.timestamp) }));
+        if (convo.latestMessage) convo.latestMessage.timestamp = new Date(convo.latestMessage.timestamp);
       });
 
       setConversations(grouped);
@@ -67,7 +60,7 @@ export default function App() {
     if (lastChat) setSelectedChat(lastChat);
   }, []);
 
-  if (loading) return <div className="app">Loading chats...</div>; // NEW
+  if (loading) return <div className="app">Loading chats...</div>;
 
   return (
     <div className="app">

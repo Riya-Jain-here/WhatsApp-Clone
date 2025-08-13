@@ -10,32 +10,32 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-//const io = new Server(httpServer, { cors: { origin: '*' } });
+
+// Socket.io setup with multiple allowed origins
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://whatsapp-clone-oted.onrender.com",
+    origin: ["https://whatsapp-clone-oted.onrender.com", "http://localhost:3000"],
     methods: ["GET", "POST"]
   }
 });
 
-
+// Connect MongoDB
 connectDB();
 
-//app.use(cors());
-app.use(
-  cors({
-    origin: "https://whatsapp-clone-oted.onrender.com",
-    credentials: true,
-  })
-);
-
+// Middleware
+app.use(cors({
+  origin: ["https://whatsapp-clone-oted.onrender.com", "http://localhost:3000"],
+  credentials: true
+}));
 app.use(express.json());
 
 // Attach io to requests
 app.use((req, res, next) => { req.io = io; next(); });
 
+// Routes
 app.use('/api/messages', messageRoutes);
 
+// Socket connection
 io.on('connection', (socket) => {
   console.log('WebSocket connected');
 });
