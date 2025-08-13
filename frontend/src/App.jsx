@@ -5,6 +5,7 @@ import './App.css';
 import API from './services/api';
 import { io } from 'socket.io-client';
 
+// Connect to backend socket
 const socket = io('https://whatsapp-clone-backend-x0z5.onrender.com', { transports: ['websocket'] });
 
 export default function App() {
