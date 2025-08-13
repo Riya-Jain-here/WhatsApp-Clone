@@ -11,11 +11,12 @@ const socket = io('https://whatsapp-clone-backend-x0z5.onrender.com', { transpor
 export default function App() {
   const [conversations, setConversations] = useState({});
   const [selectedChat, setSelectedChat] = useState(null);
+  const [loading, setLoading] = useState(true); // NEW: loading state
 
   const loadConversations = async () => {
     try {
-      const res = await API.get('/conversations'); // returns array of messages
-      const messages = res.data;
+      const res = await API.get('/conversations');
+      const messages = Array.isArray(res.data) ? res.data : []; // ENSURE array
 
       // Group messages by wa_id
       const grouped = {};
@@ -23,10 +24,8 @@ export default function App() {
         if (!grouped[m.wa_id]) grouped[m.wa_id] = { messages: [], latestMessage: null };
         grouped[m.wa_id].messages.push({ ...m, timestamp: new Date(m.timestamp) });
 
-        if (
-          !grouped[m.wa_id].latestMessage ||
-          new Date(m.timestamp) > new Date(grouped[m.wa_id].latestMessage.timestamp)
-        ) {
+        if (!grouped[m.wa_id].latestMessage ||
+            new Date(m.timestamp) > new Date(grouped[m.wa_id].latestMessage.timestamp)) {
           grouped[m.wa_id].latestMessage = { ...m, timestamp: new Date(m.timestamp) };
         }
       });
@@ -34,6 +33,9 @@ export default function App() {
       setConversations(grouped);
     } catch (err) {
       console.error('Failed to load conversations', err);
+      setConversations({});
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,6 +66,8 @@ export default function App() {
     const lastChat = localStorage.getItem('selectedChat');
     if (lastChat) setSelectedChat(lastChat);
   }, []);
+
+  if (loading) return <div className="app">Loading chats...</div>; // NEW
 
   return (
     <div className="app">

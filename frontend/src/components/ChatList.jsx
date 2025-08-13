@@ -16,8 +16,9 @@ export default function ChatList({ conversations, onSelect, selectedWaId }) {
           const { messages, latestMessage } = convo;
           if (!messages || messages.length === 0) return null;
 
-          const contactMessage = messages.find(msg => msg.name !== 'You');
-          const contactName = contactMessage ? contactMessage.name : wa_id;
+          // Use optional chaining and fallback
+          const contactMessage = messages.find(msg => msg.name && msg.name !== 'You');
+          const contactName = contactMessage?.name || wa_id || "Unknown";
 
           return (
             <div
@@ -25,10 +26,14 @@ export default function ChatList({ conversations, onSelect, selectedWaId }) {
               className={`chat-item ${wa_id === selectedWaId ? 'active' : ''}`}
               onClick={() => handleClick(wa_id)}
             >
-              <div className="avatar">{contactName.charAt(0).toUpperCase()}</div>
+              <div className="avatar">
+                {contactName.charAt(0).toUpperCase()}
+              </div>
               <div className="chat-meta">
-                <div className="name"><span>{contactName}</span></div>
-                <div className="preview">{latestMessage?.text}</div>
+                <div className="name">
+                  <span>{contactName}</span>
+                </div>
+                <div className="preview">{latestMessage?.text || ""}</div>
               </div>
             </div>
           );
