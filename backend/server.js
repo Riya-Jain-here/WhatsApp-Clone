@@ -10,11 +10,25 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: '*' } });
+//const io = new Server(httpServer, { cors: { origin: '*' } });
+const io = new Server(httpServer, {
+  cors: {
+    origin: "https://whatsapp-clone-oted.onrender.com/",
+    methods: ["GET", "POST"]
+  }
+});
+
 
 connectDB();
 
-app.use(cors());
+//app.use(cors());
+app.use(
+  cors({
+    origin: "https://whatsapp-clone-oted.onrender.com/",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Attach io to requests
