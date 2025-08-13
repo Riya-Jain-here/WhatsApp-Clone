@@ -6,6 +6,9 @@
 
 /frontend/README.md
 
+# Ignore frontend node_modules
+/backend/payloads/
+
 # Ignore environment config files
 /backend/.env
 /frontend/.env
