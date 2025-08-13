@@ -1,25 +1,26 @@
-import React, { useEffect, useState, useRef } from "react";
-import "./ChatWindowStyle.css";
-import API from "../services/api";
-import { io } from "socket.io-client";
+import React, { useEffect, useState, useRef } from 'react';
+import './ChatWindowStyle.css';
+import API from '../services/api';
+import { io } from 'socket.io-client';
 
-const socket = io("https://whatsapp-clone-backend-x0z5.onrender.com/");
+const socket = io('https://whatsapp-clone-backend-x0z5.onrender.com', { transports: ['websocket'] });
 
 export default function ChatWindow({ wa_id }) {
   const [messages, setMessages] = useState([]);
-  const [text, setText] = useState("");
-  const [contactName, setContactName] = useState("");
+  const [text, setText] = useState('');
+  const [contactName, setContactName] = useState('');
   const messagesEndRef = useRef(null);
 
   const loadMessages = async () => {
     try {
       const res = await API.get(`/messages/${wa_id}`);
-      setMessages(res.data);
+      const msgs = res.data.map((m) => ({ ...m, timestamp: new Date(m.timestamp) }));
+      setMessages(msgs);
 
-      const contactMsg = res.data.find((m) => !m.status);
+      const contactMsg = msgs.find((m) => m.name !== 'You');
       setContactName(contactMsg ? contactMsg.name : wa_id);
     } catch (err) {
-      console.error("Failed to load messages", err);
+      console.error('Failed to load messages', err);
     }
   };
 
@@ -29,26 +30,26 @@ export default function ChatWindow({ wa_id }) {
     const handler = (msg) => {
       if (msg.wa_id === wa_id) loadMessages();
     };
-    socket.on("new_message", handler);
-    socket.on("status_update", handler);
+    socket.on('new_message', handler);
+    socket.on('status_update', handler);
 
     return () => {
-      socket.off("new_message", handler);
-      socket.off("status_update", handler);
+      socket.off('new_message', handler);
+      socket.off('status_update', handler);
     };
   }, [wa_id]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const sendMessage = async () => {
-    if (text.trim() === "") return;
+    if (text.trim() === '') return;
     try {
-      await API.post("/send", { wa_id, text });
-      setText("");
+      await API.post('/send', { wa_id, text });
+      setText('');
     } catch (err) {
-      console.error("Failed to send message", err);
+      console.error('Failed to send message', err);
     }
   };
 
@@ -57,29 +58,21 @@ export default function ChatWindow({ wa_id }) {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) return "Today";
-    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
 
-    return date.toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  let lastDate = "";
+  let lastDate = '';
 
   return (
     <div className="chat-container">
       {/* Header */}
       <div className="chat-header">
-         <div className="avatar">
-                {contactName.charAt(0).toUpperCase()}
-              </div>
+        <div className="avatar">{contactName.charAt(0).toUpperCase()}</div>
         <div className="info">
-          
-         <span>{contactName}</span> 
-         
+          <span>{contactName}</span>
           <small>{wa_id}</small>
         </div>
       </div>
@@ -92,27 +85,16 @@ export default function ChatWindow({ wa_id }) {
           const showDate = dateLabel !== lastDate;
           lastDate = dateLabel;
 
-          const isOutgoing = m.name === "You";
+          const isOutgoing = m.name === 'You';
 
           return (
             <React.Fragment key={m._id}>
               {showDate && <div className="date-label">{dateLabel}</div>}
-              <div
-                className={`message-row ${
-                  isOutgoing ? "outgoing" : "incoming"
-                }`}
-              >
-                <div
-                  className={`message-bubble ${
-                    isOutgoing ? "message-outgoing" : "message-incoming"
-                  }`}
-                >
+              <div className={`message-row ${isOutgoing ? 'outgoing' : 'incoming'}`}>
+                <div className={`message-bubble ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`}>
                   {m.text}
                   <div className="message-meta">
-                    {msgDate.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     {isOutgoing && ` (${m.status})`}
                   </div>
                 </div>
@@ -129,9 +111,7 @@ export default function ChatWindow({ wa_id }) {
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
-          }}
+          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
           placeholder="Send message"
         />
         <button onClick={sendMessage}>➤</button>
